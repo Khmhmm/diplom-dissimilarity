@@ -4,11 +4,14 @@ import torch.optim as optim
 import torch.nn as nn
 import matplotlib.pyplot as plt
 
+import os.path as osp
+
 from net import ConvClassifierNet
 from dataset_extractor import Dataset
 
 
-NUM_EPOCHS = 10
+NUM_EPOCHS = 10000
+SAVE_DIR = 'weights'
 SAVE_PATH = 'apples_cucumbers.pth'
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -30,6 +33,7 @@ epoch_scatter = []
 for epoch in range(NUM_EPOCHS):  # loop over the dataset multiple times
     all_inputs, all_labels = ds.get_inputs(), ds.get_labels()
     running_loss = 0.0
+    last_loss = 0.
     for i, inputs_labels in enumerate(zip(ds.get_inputs(), ds.get_labels()), 0):
         # get the inputs; data is a list of [inputs, labels]
         inputs, labels = inputs_labels
@@ -47,20 +51,24 @@ for epoch in range(NUM_EPOCHS):  # loop over the dataset multiple times
         # optimize
         optimizer.step()
 
-        # print statistics
+        # score loss for each 10th minibatch
         running_loss += loss.item()
         if i % 10 == 9:
-            print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 1000:.3f}')
-            loss_scatter.append(running_loss / 1000)
-            epoch_scatter.append(epoch * len(ds.get_labels()) + i / len(ds.get_labels()))
+            last_loss = running_loss / 10
             running_loss = 0.0
 
-    print(f'Save epoch {epoch} to {str(epoch) + "_" + SAVE_PATH}')
-    torch.save(cnn.state_dict(), str(epoch) + "_" + SAVE_PATH)
+    if epoch % (NUM_EPOCHS / 10) == NUM_EPOCHS / 10 - 1:
+        print(f'Save epoch {epoch} to {str(epoch) + "_" + SAVE_PATH}')
+        torch.save(cnn.state_dict(), osp.join(SAVE_DIR, str(epoch) + "_" + SAVE_PATH))
+
+    print(f'[{epoch + 1} ep.] loss: {last_loss:.3f}')
+    loss_scatter.append(last_loss)
+    epoch_scatter.append(epoch)
 
 print('Finished Training')
-torch.save(cnn.state_dict(), SAVE_PATH)
+torch.save(cnn.state_dict(), osp.join(SAVE_DIR, 'last_' + SAVE_PATH))
 
+print(cnn(all_inputs[0].to(device)), all_labels[0])
 print(cnn(all_inputs[-1].to(device)), all_labels[-1])
 
 print(f'Saved pth to {SAVE_PATH}. Show loss graphic...')
