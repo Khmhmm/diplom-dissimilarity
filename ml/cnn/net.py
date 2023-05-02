@@ -16,6 +16,7 @@ class ConvClassifierNet(nn.Module):
         self.pl = nn.MaxPool2d(2, 2)
         self.cnv2 = nn.Conv2d(6, 16, conv_kernel)
         self.cnv3 = nn.Conv2d(16, 32, conv_kernel)
+        # Хардкод лютый
         self.lin1 = nn.Linear(32 * 28 * 28, 120)
         self.lin2 = nn.Linear(120, 64)
         self.lin3 = nn.Linear(64, classes)

@@ -37,7 +37,7 @@ class Dataset:
 
     def _batch_slice(self, inputs, labels):
         raw_inputs = np.array(inputs, dtype=np.float32)
-        raw_labels = np.array(labels, dtype=np.float32)
+        raw_labels = np.array(labels, dtype=np.int64)
 
         batched_inputs = []
         batched_labels = []

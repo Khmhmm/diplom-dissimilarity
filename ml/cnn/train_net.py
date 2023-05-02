@@ -8,10 +8,11 @@ from net import ConvClassifierNet
 from dataset_extractor import Dataset
 
 
-NUM_EPOCHS = 2
+NUM_EPOCHS = 10
 SAVE_PATH = 'apples_cucumbers.pth'
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+# device = 'cpu'
 print(f'Net will be trained on {device}')
 
 print('Loading dataset...')
@@ -33,7 +34,7 @@ for epoch in range(NUM_EPOCHS):  # loop over the dataset multiple times
         # get the inputs; data is a list of [inputs, labels]
         inputs, labels = inputs_labels
         if device != 'cpu':
-            inputs, labels = inputs.cuda(), labels.cuda()
+            inputs, labels = inputs.to(device), labels.to(device)
 
         # zero the parameter gradients
         optimizer.zero_grad()
@@ -60,11 +61,8 @@ for epoch in range(NUM_EPOCHS):  # loop over the dataset multiple times
 print('Finished Training')
 torch.save(cnn.state_dict(), SAVE_PATH)
 
-print(cnn(all_inputs[-1]), all_labels[-1])
+print(cnn(all_inputs[-1].to(device)), all_labels[-1])
 
 print(f'Saved pth to {SAVE_PATH}. Show loss graphic...')
-print(epoch_scatter)
-print('--')
-print(loss_scatter)
 plt.plot(epoch_scatter, loss_scatter)
 plt.show()
