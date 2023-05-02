@@ -4,3 +4,4 @@ ml/svm/__pycache__/
 ml/svm/assets/
 ml/svm/test_assets/
 ml/svm/test_poison/
+/ml/cnn/__pycache__/
