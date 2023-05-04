@@ -10,9 +10,26 @@ from net import ConvClassifierNet
 from dataset_extractor import Dataset
 
 
-NUM_EPOCHS = 10000
+NUM_EPOCHS = 400
 SAVE_DIR = 'weights'
 SAVE_PATH = 'apples_cucumbers.pth'
+
+
+def count_precision(cnn, inp, lbl, device='cpu'):
+    inp = inp.to(device)
+    outputs = cnn(inp)
+    outputs = outputs.to('cpu').detach().numpy()
+
+    valid = 0
+    lbl_len = len(lbl)
+
+    for i in range(lbl_len):
+        i_lbl = np.argmax(outputs[i])
+        if i_lbl == lbl[i]:
+            valid += 1
+
+    return valid / lbl_len
+
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 # device = 'cpu'
@@ -28,6 +45,7 @@ cnn.to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(cnn.parameters(), lr=0.001, momentum=0.9)
 loss_scatter = []
+precision_scatter = []
 epoch_scatter = []
 
 for epoch in range(NUM_EPOCHS):  # loop over the dataset multiple times
@@ -61,8 +79,10 @@ for epoch in range(NUM_EPOCHS):  # loop over the dataset multiple times
         print(f'Save epoch {epoch} to {str(epoch) + "_" + SAVE_PATH}')
         torch.save(cnn.state_dict(), osp.join(SAVE_DIR, str(epoch) + "_" + SAVE_PATH))
 
-    print(f'[{epoch + 1} ep.] loss: {last_loss:.3f}')
+    precision = count_precision(cnn, ds.get_valid_inputs(), ds.get_valid_labels(), device)
+    print(f'[{epoch + 1} ep.] precision: {precision:.3f}, loss: {last_loss:.3f}')
     loss_scatter.append(last_loss)
+    precision_scatter.append(precision)
     epoch_scatter.append(epoch)
 
 print('Finished Training')
@@ -71,6 +91,8 @@ torch.save(cnn.state_dict(), osp.join(SAVE_DIR, 'last_' + SAVE_PATH))
 print(cnn(all_inputs[0].to(device)), all_labels[0])
 print(cnn(all_inputs[-1].to(device)), all_labels[-1])
 
-print(f'Saved pth to {SAVE_PATH}. Show loss graphic...')
-plt.plot(epoch_scatter, loss_scatter)
-plt.show()
+print(f'Saved pth to {SAVE_PATH}. Save loss graphic...')
+plt.plot(epoch_scatter, loss_scatter, '-', color='red', label='loss')
+plt.plot(epoch_scatter, precision_scatter, '-', color='green', label='precision')
+plt.legend(loc='best')
+plt.savefig('loss_graphic.png')

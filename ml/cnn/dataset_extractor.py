@@ -19,10 +19,14 @@ class Dataset:
         inputs, labels = self._process_dirs()
         self.inputs, self.labels = self._batch_slice(inputs, labels)
 
-    def _process_dirs(self):
-        def extract_part(dirp, class_num=0):
+        valid_inps, valid_lbls = Dataset.extract_part(CUCUMBERS_DIR, 1, 'test')
+        self.valid_inps = torch.from_numpy(np.array(valid_inps, dtype=np.float32))
+        self.valid_lbls = torch.from_numpy(np.array(valid_lbls, dtype=np.int64))
+
+    @staticmethod
+    def extract_part(dirp, class_num=0, subdir='train'):
             li = []
-            img_ps = glob(osp.join(osp.join(dirp, 'train'), '*.jpeg')) + glob(osp.join(osp.join(dirp, 'train'), '*.jpg')) + glob(osp.join(osp.join(dirp, 'train'), '*.png'))
+            img_ps = glob(osp.join(osp.join(dirp, subdir), '*.jpeg')) + glob(osp.join(osp.join(dirp, subdir), '*.jpg')) + glob(osp.join(osp.join(dirp, subdir), '*.png'))
             for img_path in img_ps:
                 base_img = cv2.resize(cv2.imread(img_path, cv2.IMREAD_UNCHANGED), TRAIN_SIZE)
                 normalized_img = base_img / 256
@@ -30,8 +34,9 @@ class Dataset:
                 li.append(normalized_img)
             return li, [class_num] * len(li)
 
-        apples, app_labels = extract_part(self.cl1_dir, 0)
-        cucumbers, cucumbers_labels = extract_part(self.cl2_dir, 1)
+    def _process_dirs(self):
+        apples, app_labels = Dataset.extract_part(self.cl1_dir, 0)
+        cucumbers, cucumbers_labels = Dataset.extract_part(self.cl2_dir, 1)
 
         return apples + cucumbers, app_labels + cucumbers_labels
 
@@ -75,3 +80,9 @@ class Dataset:
         Returns labels like: [batch_num, class_label]
         '''
         return self.labels
+
+    def get_valid_inputs(self):
+        return self.valid_inps
+
+    def get_valid_labels(self):
+        return self.valid_lbls
