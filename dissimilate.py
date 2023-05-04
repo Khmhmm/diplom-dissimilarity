@@ -99,7 +99,8 @@ def fit_edge(img, p1, p2, p3, roi_ltrb, color, thickness=3):
 
 def dissimilate_image(img: np.ndarray, kernel=[9, 9]):
     hmax = img.shape[0]
-    corners = corner_peaks(corner_fast(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY), n=8, threshold=0.015), min_distance=1)
+    # NOTE: set threshold=0.015 to increase corners count
+    corners = corner_peaks(corner_fast(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY), n=8, threshold=0.15), min_distance=1)
     original_img = dcpy(img)
     for p in corners:
         px = p[1]
